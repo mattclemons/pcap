@@ -8,7 +8,7 @@ string = sys.argv[1]
 
 # if encoded pcap is hex from sourcefire
 if re.match(r"^[0-9a-fA-F]+$", string):
-    print "all day I dream about hex\n"
+    print "\nall day I dream about hex\n"
     print binascii.unhexlify(string)
 
 # if encoded pcap is base64 from suricata
