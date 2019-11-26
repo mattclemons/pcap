@@ -1,0 +1,618 @@
+cEdge-csr-west03#sh sdwan ver
+16.12.1d.0.32
+
+cEdge-csr-west03# sh utd engine standard status
+Engine version       : 1.0.8_SV2.9.13.0_XE16.12
+Profile              : Cloud-Low
+System memory        :
+              Usage  : 14.50 %
+              Status : Green
+Number of engines    : 1
+
+Engine        Running    Health     Reason
+===========================================
+Engine(#1):   Yes        Green      None
+=======================================================
+
+Overall system status: Green
+
+Signature update status:
+=========================
+Current signature package version: 29.0.c
+Last update status: None
+Last successful update time: None
+Last failed update time: None
+Last failed update reason: None
+Next update scheduled at: None
+Current status: Idle
+
+cEdge-csr-west03#sh int GigabitEthernet 4
+GigabitEthernet4 is up, line protocol is up
+  Hardware is CSR vNIC, address is 0050.5691.0595 (bia 0050.5691.0595)
+  Description: INSIDE
+  Internet address is 172.16.88.1/24
+
+cEdge-csr-west03#sh int GigabitEthernet 5
+GigabitEthernet5 is up, line protocol is up
+  Hardware is CSR vNIC, address is 0050.5691.23e2 (bia 0050.5691.23e2)
+  Description: OUTSIDE
+  Internet address is 172.16.99.1/24
+
+
+cEdge-csr-west03#sh run
+Building configuration...
+
+Current configuration : 15443 bytes
+!
+! Last configuration change at 16:57:15 UTC Tue Oct 15 2019 by NETCONF
+!
+version 16.12
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+! Call-home is enabled by Smart-Licensing.
+service call-home
+platform qfp utilization monitor load 80
+no platform punt-keepalive disable-kernel-core
+platform inspect match-statistics per-filter
+platform console virtual
+!
+hostname cEdge-csr-west03
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition 10
+ description Service VPN 10
+ rd 1:10
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+vrf definition 150
+ rd 1:150
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+vrf definition 65528
+ !
+ address-family ipv4
+ exit-address-family
+!
+vrf definition 65529
+ rd 65529:1
+ !
+ address-family ipv4
+ exit-address-family
+!
+vrf definition Mgmt-intf
+ rd 1:512
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+logging buffered 512000
+logging persistent
+no logging rate-limit
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local
+!
+!
+!
+!
+!
+aaa session-id common
+call-home
+ ! If contact email address in call-home is configured as sch-smart-licensing@cisco.com
+ ! the email address configured in Cisco Smart License Portal will be used as contact email address to send SCH notifications.
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+  no destination transport-method email
+fhrp version vrrp v3
+!
+!
+!
+!
+!
+!
+!
+ip name-server 171.70.168.183 173.36.131.10
+ip name-server vrf Mgmt-Intf 171.70.168.183 173.36.131.10
+no ip dhcp use class
+!
+!
+!
+no ip igmp ssm-map query dns
+login on-success log
+ipv6 unicast-routing
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+!
+!
+!
+!
+flow record sdwan_flow_record
+ description flow and application visibility records
+ match ipv4 destination address
+ match ipv4 protocol
+ match ipv4 source address
+ match routing vrf service
+ match transport destination-port
+ match transport source-port
+ collect application name
+ collect connection id long
+ collect counter bytes long
+ collect counter bytes sdwan dropped long
+ collect counter packets long
+ collect counter packets sdwan dropped long
+ collect counter packets sdwan pkt-cxp-d-pkts
+ collect counter packets appqoe fec-d-pkts
+ collect counter packets appqoe fec-r-pkts
+ collect counter packets appqoe pkt-dup-d-pkts-orig
+ collect counter packets appqoe pkt-dup-d-pkts-dup
+ collect counter packets appqoe pkt-dup-r-pkts
+ collect flow end-reason
+ collect interface input
+ collect interface output
+ collect ipv4 dscp
+ collect overlay session id input
+ collect overlay session id output
+ collect timestamp absolute first
+ collect timestamp absolute last
+ collect transport tcp flags
+ collect drop cause id
+ collect sdwan sla-not-met
+ collect sdwan preferred-color-not-met
+ collect sdwan qos-queue-id
+!
+!
+flow exporter sdwan_flow_exporter_0
+ description export flow and application visibility records to vManage
+ destination local sdwan
+ transport udp 5458
+ export-protocol ipfix
+ option drop-cause-table
+ option application-attributes
+ option application-table
+!
+!
+flow monitor sdwan_flow_monitor
+ description monitor flows for vManage and external collectors
+ exporter sdwan_flow_exporter_0
+ cache timeout inactive 10
+ cache timeout active 60
+ record sdwan_flow_record
+!
+parameter-map type regex TEST_ASDFASDFASDF-bl_
+ pattern asdfasdfasdf.com
+!
+parameter-map type regex testtest_allow-wl_
+ pattern testtest.com
+!
+
+parameter-map type inspect-global
+ log dropped-packets
+ multi-tenancy
+ vpn zone security allow-dia
+ alert on
+ max-incomplete tcp 1000
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+crypto pki trustpoint TP-self-signed-412769400
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-412769400
+ revocation-check none
+ rsakeypair TP-self-signed-412769400
+!
+crypto pki trustpoint SLA-TrustPoint
+ enrollment pkcs12
+ revocation-check crl
+!
+!
+crypto pki certificate chain TP-self-signed-412769400
+ certificate self-signed 01
+  3082032E 30820216 A0030201 02020101 300D0609 2A864886 F70D0101 05050030
+  30312E30 2C060355 04031325 494F532D 53656C66 2D536967 6E65642D 43657274
+  69666963 6174652D 34313237 36393430 30301E17 0D313931 30313431 36323631
+  305A170D 33303031 30313030 30303030 5A303031 2E302C06 03550403 1325494F
+  532D5365 6C662D53 69676E65 642D4365 72746966 69636174 652D3431 32373639
+  34303030 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 82010A02
+  82010100 B715142C 5B7B3BB5 C4E42593 2B6C60D0 FDD00CA2 DBB8C8AD FD5296A4
+  1AC450CB 66D24DB7 7E1E43AC 4A238797 4584B002 768636A4 FBB227ED 058086FD
+  E26FA97F 09387EC6 7F51B2E3 F6AE772F E981F203 C5730D09 140C289B 433986F4
+  3BCAD287 73BBE7EF 32891352 4ADCD072 BBBC4AA6 F2BA50FA 84A4FE37 5F3A01C8
+  950B6CE9 3EA848A2 AD5F4EEA ADC00E11 4EC7DB26 7AEE2B55 CD23933D 010C731F
+  15ED73AF A176A538 F2AAEF69 B36F5773 641C80A5 AEF0C29F 532F59D2 C34890F1
+  C4ABC81E 4F524586 298664AE 4C200E33 35DFBFD0 48F6C79E 1B665609 1CDD53F0
+  5187B68A E528A93A C5F7426A F19F8E99 E0A45390 13C6DC10 DB7960AF 464F6A66
+  50B1ED4B 02030100 01A35330 51300F06 03551D13 0101FF04 05300301 01FF301F
+  0603551D 23041830 168014DC 3CCEB5DF 6C733135 49743659 4C52E182 A3F18F30
+  1D060355 1D0E0416 0414DC3C CEB5DF6C 73313549 7436594C 52E182A3 F18F300D
+  06092A86 4886F70D 01010505 00038201 01003A1E 6BD434B4 8249093D E8EDEE55
+  5C2AEEE2 86854CC3 4B0CEB1B 5EE8C6B0 39380A3C B452512F 5F8001E0 3F1BA7A4
+  BA148F37 40B5D3E3 8CC886A0 B6334779 751C2BB6 E9841371 181B3BF9 B65E4E77
+  972E0E8C 79982586 716604B7 B18B4D62 81BC8080 D6001832 D4A9220E 45A5C1D6
+  829F314B C7F2B25F 38097260 1E7E737C CFCF8808 A793512A 87869B6E BEF35888
+  04CF693F DA5EDD73 6B37A86F 60C4FD23 3E8D19AC E480136C 92F9CA7F E6CD1C10
+  25AFD900 9E53D6CE CC934E5B 80B8C640 0FC231E7 5923FDE0 1E2AF8BF 47CCD208
+  47A8EBB9 BB34A7C2 63AF9821 99A0FBF0 A41CF76B 38E0735D DE02F85D FD644CD3
+  284A5433 5A31A8CE 661AF301 DC041904 B1CC
+  	quit
+crypto pki certificate chain SLA-TrustPoint
+ certificate ca 01
+  30820321 30820209 A0030201 02020101 300D0609 2A864886 F70D0101 0B050030
+  32310E30 0C060355 040A1305 43697363 6F312030 1E060355 04031317 43697363
+  6F204C69 63656E73 696E6720 526F6F74 20434130 1E170D31 33303533 30313934
+  3834375A 170D3338 30353330 31393438 34375A30 32310E30 0C060355 040A1305
+  43697363 6F312030 1E060355 04031317 43697363 6F204C69 63656E73 696E6720
+  526F6F74 20434130 82012230 0D06092A 864886F7 0D010101 05000382 010F0030
+  82010A02 82010100 A6BCBD96 131E05F7 145EA72C 2CD686E6 17222EA1 F1EFF64D
+  CBB4C798 212AA147 C655D8D7 9471380D 8711441E 1AAF071A 9CAE6388 8A38E520
+  1C394D78 462EF239 C659F715 B98C0A59 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE
+  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96 6FA68957 A2617DE7 104FDC5F EA2956AC
+  7390A3EB 2B5436AD C847A2C5 DAB553EB 69A9A535 58E9F3E3 C0BD23CF 58BD7188
+  68E69491 20F320E7 948E71D7 AE3BCC84 F10684C7 4BC8E00F 539BA42B 42C68BB7
+  C7479096 B4CB2D62 EA2F505D C7B062A4 6811D95B E8250FC4 5D5D5FB8 8F27D191
+  C55F0D76 61F9A4CD 3D992327 A8BB03BD 4E6D7069 7CBADF8B DF5F4368 95135E44
+  DFC7C6CF 04DD7FD1 02030100 01A34230 40300E06 03551D0F 0101FF04 04030201
+  06300F06 03551D13 0101FF04 05300301 01FF301D 0603551D 0E041604 1449DC85
+  4B3D31E5 1B3E6A17 606AF333 3D3B4C73 E8300D06 092A8648 86F70D01 010B0500
+  03820101 00507F24 D3932A66 86025D9F E838AE5C 6D4DF6B0 49631C78 240DA905
+  604EDCDE FF4FED2B 77FC460E CD636FDB DD44681E 3A5673AB 9093D3B1 6C9E3D8B
+  D98987BF E40CBD9E 1AECA0C2 2189BB5C 8FA85686 CD98B646 5575B146 8DFC66A8
+  467A3DF4 4D565700 6ADF0F0D CF835015 3C04FF7C 21E878AC 11BA9CD2 55A9232C
+  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB E973DE7F 5BDDEB86 C71E3B49 1765308B
+  5FB0DA06 B92AFE7F 494E8A9E 07B85737 F3A58BE1 1A48A229 C37C1E69 39F08678
+  80DDCD16 D6BACECA EEBC7CF9 8428787B 35202CDC 60E4616A B623CDBD 230E3AFB
+  418616A9 4093E049 4D10AB75 27E86F73 932E35B5 8862FDAE 0275156F 719BB2F0
+  D697DF7F 28
+  	quit
+!
+crypto pki certificate pool
+ cabundle nvram:ios_core.p7b
+!
+license udi pid CSR1000V sn 9VSBZRHVXUW
+license boot level ax
+diagnostic bootup level minimal
+memory free low-watermark processor 72422
+!
+!
+!
+!
+!
+object-group service FAKE_INET_FW2-seq-1-service-og_
+ tcp-udp eq 6667
+!
+object-group network FAKE_INET_FW2-seq-11-network-dstn-og_
+ host 172.16.99.50
+!
+object-group service FAKE_INET_FW2-seq-11-service-og_
+ ip
+!
+object-group network FAKE_INET_FW2-seq-21-network-dstn-og_
+ host 172.16.88.50
+!
+object-group service FAKE_INET_FW2-seq-21-service-og_
+ ip
+!
+!
+spanning-tree extend system-id
+!
+username admin privilege 15 secret 9 $9$3VEF3VAI3lMM3E$awMmxogwHvRdxoHA5u1utUOAmKPBUvUbkD4PnwNWmWk
+!
+redundancy
+!
+!
+!
+no crypto ikev2 diagnose error
+!
+!
+!
+!
+class-map type inspect match-all FAKE_INET_FW2-seq-1-cm_
+ match access-group name FAKE_INET_FW2-seq-1-acl_
+class-map type inspect match-all FAKE_INET_FW2-seq-21-cm_
+ match access-group name FAKE_INET_FW2-seq-21-acl_
+class-map type inspect match-all FAKE_INET_FW2-seq-11-cm_
+ match access-group name FAKE_INET_FW2-seq-11-acl_
+!
+policy-map type inspect FAKE_INET_FW2
+ class type inspect FAKE_INET_FW2-seq-1-cm_
+  drop log
+ class type inspect FAKE_INET_FW2-seq-11-cm_
+  inspect
+ class type inspect FAKE_INET_FW2-seq-21-cm_
+  inspect
+ class class-default
+  drop
+!
+zone security 10_OUTSIDE
+ vpn 10
+zone security 150_INSIDE
+ vpn 150
+zone security OUTSIDE
+ vpn 0
+zone-pair security ZP_10_OUTSIDE_150_INSI_624857313 source 10_OUTSIDE destination 150_INSIDE
+ service-policy type inspect FAKE_INET_FW2
+zone-pair security ZP_10_OUTSIDE_OUTSID_-1271080363 source 10_OUTSIDE destination OUTSIDE
+ service-policy type inspect FAKE_INET_FW2
+zone-pair security ZP_150_INSIDE_10_OUTS_-471156147 source 150_INSIDE destination 10_OUTSIDE
+ service-policy type inspect FAKE_INET_FW2
+zone-pair security ZP_150_INSIDE_OUTSIDE_-262091649 source 150_INSIDE destination OUTSIDE
+ service-policy type inspect FAKE_INET_FW2
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback65528
+ vrf forwarding 65528
+ ip address 192.168.1.1 255.255.255.255
+!
+interface Tunnel2
+ ip unnumbered GigabitEthernet2
+ no ip redirects
+ ipv6 unnumbered GigabitEthernet2
+ no ipv6 redirects
+ tunnel source GigabitEthernet2
+ tunnel mode sdwan
+!
+interface VirtualPortGroup0
+ vrf forwarding 65529
+ ip address 192.168.1.1 255.255.255.252
+ no mop enabled
+ no mop sysid
+!
+interface VirtualPortGroup1
+ ip address 192.0.2.1 255.255.255.252
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet1
+ vrf forwarding Mgmt-intf
+ ip address 10.199.88.221 255.255.255.0
+ negotiation auto
+ arp timeout 1200
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet2
+ ip address 10.199.89.16 255.255.255.0
+ ip nat outside
+ negotiation auto
+ arp timeout 1200
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet3
+ no ip address
+ negotiation auto
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet4
+ description INSIDE
+ vrf forwarding 150
+ ip address 172.16.88.1 255.255.255.0
+ ip nbar protocol-discovery
+ negotiation auto
+ arp timeout 1200
+ no mop enabled
+ no mop sysid
+!
+interface GigabitEthernet5
+ description OUTSIDE
+ vrf forwarding 10
+ ip address 172.16.99.1 255.255.255.0
+ ip nbar protocol-discovery
+ negotiation auto
+ arp timeout 1200
+ no mop enabled
+ no mop sysid
+!
+router omp
+!
+utd multi-tenancy
+utd engine standard multi-tenancy
+ web-filter block page profile block-FAKE_INET_PROXY
+  redirect-url http://youvebeenredirected.com
+ web-filter url profile FAKE_INET_PROXY
+  alert all
+  blacklist
+   parameter-map regex TEST_ASDFASDFASDF-bl_
+  whitelist
+   parameter-map regex testtest_allow-wl_
+  categories block
+   adult-and-pornography
+  block page-profile block-FAKE_INET_PROXY
+  log level error
+  reputation
+   block-threshold moderate-risk
+ threat-inspection profile FAKE_INET_IPS
+  threat detection
+  policy security
+  logging level debug
+ utd global
+  logging host 10.199.88.245
+  file-analysis
+   apikey 0 5mcud7g1fposjdafffphl3mcj8
+   cloud-server isr.api.threatgrid.com
+  file-reputation
+   cloud-server cloud-isr-asn.amp.cisco.com
+   est-server cloud-isr-est.amp.cisco.com
+ file-analysis profile FAKE_INET_AMP-fa-profile
+  alert level critical
+  file-types
+   pdf
+   ms-exe
+   new-office
+   rtf
+ file-reputation profile FAKE_INET_AMP-fr-profile
+  alert level critical
+ file-inspection profile FAKE_INET_AMP-fi-profile
+  reputation profile FAKE_INET_AMP-fr-profile
+  analysis profile FAKE_INET_AMP-fa-profile
+ policy utd-policy-vrf-10
+  vrf 10
+  all-interfaces
+  file-inspection profile FAKE_INET_AMP-fi-profile
+  threat-inspection profile FAKE_INET_IPS
+  web-filter url profile FAKE_INET_PROXY
+ policy utd-policy-vrf-150
+  vrf 150
+  all-interfaces
+  file-inspection profile FAKE_INET_AMP-fi-profile
+  threat-inspection profile FAKE_INET_IPS
+  web-filter url profile FAKE_INET_PROXY
+ policy utd-policy-vrf-global
+  vrf global
+  all-interfaces
+  threat-inspection profile FAKE_INET_IPS
+!
+!
+iox
+ip forward-protocol nd
+ip visibility global flow monitor sdwan_flow_monitor input
+no ip http server
+ip http secure-server
+!
+ip nat route vrf 65528 0.0.0.0 0.0.0.0 global
+ip nat route vrf 150 0.0.0.0 0.0.0.0 global
+ip nat route vrf 65529 0.0.0.0 0.0.0.0 global
+ip nat translation tcp-timeout 3600
+ip nat translation udp-timeout 60
+no ip nat service skinny tcp port 2000
+no ip nat service sip tcp port 5060
+no ip nat service sip udp port 5060
+no ip nat service H225
+no ip nat service ras
+no ip nat service rtsp udp
+no ip nat service rtsp tcp
+no ip nat service dns tcp
+no ip nat service dns udp
+no ip nat service netbios-ns tcp
+no ip nat service netbios-ns udp
+no ip nat service netbios-ssn
+no ip nat service netbios-dgm
+no ip nat service ldap
+no ip nat service sunrpc udp
+no ip nat service sunrpc tcp
+no ip nat service msrpc tcp
+no ip nat service tftp
+no ip nat service rcmd
+no ip nat service pptp
+no ip nat service ftp
+no ip nat service gatekeeper
+no ip nat service dns-reset-ttl
+ip nat inside source list nat-dia-vpn-hop-access-list interface GigabitEthernet2 overload
+ip nat inside source list utd-nat-acl interface GigabitEthernet2 overload
+ip route 0.0.0.0 0.0.0.0 10.199.89.1
+ip route 192.168.0.0 255.255.0.0 10.199.89.1
+ip route vrf Mgmt-intf 0.0.0.0 0.0.0.0 10.199.88.1
+ip scp server enable
+!
+ip access-list extended FAKE_INET_FW2-seq-1-acl_
+ 11 permit object-group FAKE_INET_FW2-seq-1-service-og_ any any
+ip access-list extended FAKE_INET_FW2-seq-11-acl_
+ 11 permit object-group FAKE_INET_FW2-seq-11-service-og_ any object-group FAKE_INET_FW2-seq-11-network-dstn-og_
+ip access-list extended FAKE_INET_FW2-seq-21-acl_
+ 11 permit object-group FAKE_INET_FW2-seq-21-service-og_ any object-group FAKE_INET_FW2-seq-21-network-dstn-og_
+ip access-list extended utd-nat-acl
+ 10 permit ip any any
+!
+logging host 10.199.80.192
+logging host 10.199.88.245
+!
+!
+route-map TEST_ROUTE_POLICY permit 65535
+!
+!
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+banner login ^CAuthorized Use Only^C
+banner motd ^CWelcome to the party^C
+!
+line con 0
+ stopbits 1
+ speed 115200
+line vty 0 4
+ transport input ssh
+line vty 5 80
+ transport input ssh
+!
+!
+!
+!
+!
+!
+app-hosting appid utd
+ app-vnic gateway0 virtualportgroup 0 guest-interface 0
+  guest-ipaddress 192.168.1.2 netmask 255.255.255.252
+ app-vnic gateway1 virtualportgroup 1 guest-interface 1
+  guest-ipaddress 192.0.2.2 netmask 255.255.255.252
+ app-resource package-profile cloud-low
+ start
+netconf-yang
+netconf-yang feature candidate-datastore
+end
